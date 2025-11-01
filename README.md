@@ -11,13 +11,21 @@
 
 My 12-year-old son, LZ, created these games using [Cryptolabs AI Chat](https://www.cryptolabs.co.za/ai-chat/). 
 
-**No coding background. No tutorials. Just ideas and conversation.**
+**No coding background. No tutorials. Just a lot of back-and-forth.**
 
-He knew what games he wanted to build. AI Chat turned those ideas into working code through simple back-and-forth conversation.
+He didn't ask once and get a perfect game. He iterated. He tested. He found bugs. He asked the AI to fix them. He adjusted colors, speeds, difficulty. He refined the gameplay until it felt right.
 
-**The result**: Four complete, playable games built in under an hour.
+**Each game took 20-30 prompts**—not one magic request.
 
-**The lesson**: If a 12-year-old with zero coding experience can build games by describing what he wants, imagine what *you* can build.
+*"Make the snake faster"*  
+*"That's too fast, slow it down a bit"*  
+*"Add a score counter"*  
+*"The collision detection is weird, fix it"*  
+*"Make the food green instead of red"*  
+
+**The result**: Four working games. Not perfect. But playable, fun, and *his*.
+
+**The lesson**: Vibe coding isn't magic. It's iteration. Fast iteration. AI handles the code; humans handle the judgment calls on what's good, what's broken, and when it's done.
 
 **Play online**: https://www.cryptolabs.co.za/vibe-games/
 
@@ -80,77 +88,93 @@ Vibe coding is development through conversation:
 
 ---
 
-## 🛠️ **The Development Process**
+## 🛠️ **The Real Development Process**
 
-### Typical Vibe Coding Session:
+### What Actually Happened (Snake Game Example):
 
 ```
-1. Describe the game idea to AI Chat
-   "Create a snake game in HTML with canvas"
-
-2. Get initial code structure
-   ✅ HTML boilerplate
-   ✅ Canvas setup
-   ✅ Game loop
-   ✅ Basic controls
-
-3. Iterate through conversation
-   "Add score tracking"
-   "Make it more colorful"
-   "Fix the collision detection bug"
-   "Add a game over screen"
-
-4. Human refines and ships
-   - Test gameplay
-   - Adjust difficulty
-   - Polish UX
-   - Decide when it's "done"
+LZ: "Make a snake game"
+AI: [generates code]
+LZ: *tests* "It doesn't move"
+AI: [fixes movement code]
+LZ: *tests* "It moves but goes through walls"
+AI: [adds boundary collision]
+LZ: *tests* "The walls work but now I can't turn properly"
+AI: [fixes turning logic]
+LZ: *tests* "Better! But the food doesn't appear"
+AI: [fixes food spawn]
+LZ: *tests* "Food works! But the snake doesn't grow when I eat it"
+AI: [implements growth]
+LZ: *tests* "It grows but the colors are ugly"
+AI: [changes color scheme]
+LZ: *tests* "Nice! Add a score counter"
+AI: [adds score]
+LZ: *tests* "The score is too small, make it bigger"
+AI: [adjusts font size]
+LZ: *tests* "Perfect! Can you add a game over screen?"
+AI: [adds game over]
+LZ: *tests* "Done! This one's finished."
 ```
 
-**AI handles**: Code generation, syntax, boilerplate, initial implementations
+**That's ~15 prompts** for one game. Test, find issue, describe it, repeat.
 
-**Human handles**: Creative direction, gameplay feel, quality bar, shipping decisions
+**AI handles**: Writing the code, fixing bugs, implementing features
+
+**Human handles**: Testing, spotting issues, deciding what's good, knowing when to stop
+
+**The speed isn't "one prompt = done."** The speed is: **no Googling, no Stack Overflow, no learning curve between idea and iteration.**
 
 ---
 
 ## 💡 **What We Learned**
 
-### Speed Wins
+### It's Not "One Prompt and Done"
 
-From idea to playable game: **8-15 minutes**
+**Reality**: Each game took 20-30 prompts with constant testing and refinement.
 
-Traditional approach (writing from scratch): 2-4 hours
+**Not magic**: Just very fast iteration loops.
 
-**AI collapsed the time-to-prototype**, letting us explore more ideas and iterate faster.
+LZ would test, find something wrong, describe it, and get a fix in seconds. Then test again. Find another issue. Fix. Repeat.
 
-### AI is a Tool, Not a Teammate
+**Traditional coding**: Find bug → Google for 20 minutes → Try solution → Doesn't work → Google more → Try again → Finally works
 
-The AI doesn't:
-- ❌ Understand if the game is fun
-- ❌ Know when to stop adding features
-- ❌ Care about the user experience
-- ❌ Make judgment calls on trade-offs
+**Vibe coding**: Find bug → "This is broken, fix it" → Fixed in 10 seconds → Test again
 
-**Humans still own**:
-- ✅ Creative vision
-- ✅ Quality standards
-- ✅ Shipping decisions
-- ✅ "Is this actually good?"
+### AI Gets Things Wrong (A Lot)
 
-### Best Practices Emerged
+**Common issues LZ hit:**
+- Collision detection bugs
+- Things moving too fast or too slow
+- Scores not updating correctly
+- Controls feeling "off"
+- Visual elements in wrong positions
+- Game over states not working
 
-**What worked well:**
-- ✅ Start with simple, clear requirements
-- ✅ Iterate in small steps
-- ✅ Test frequently
-- ✅ Be specific about what's wrong
-- ✅ Know when to take over manually
+**The difference**: He didn't need to debug *why*. He just described *what* was wrong, and the AI fixed it.
 
-**What didn't:**
-- ❌ Vague requests ("make it better")
-- ❌ Too many features at once
-- ❌ Expecting AI to understand "fun"
-- ❌ Not testing between iterations
+### Humans Still Do the Hard Work
+
+**LZ had to:**
+- ✅ Test every single change
+- ✅ Decide if gameplay felt good
+- ✅ Know when colors looked bad
+- ✅ Recognize broken collision
+- ✅ Determine when to stop iterating
+- ✅ Choose which game to build next
+
+**AI doesn't know**:
+- ❌ If a game is fun
+- ❌ If difficulty is balanced
+- ❌ If colors look good together
+- ❌ When features are "enough"
+
+### The Real Skill Shift
+
+**Before AI**: Need to know syntax, debugging, Stack Overflow, frameworks
+
+**With AI**: Need to know what you want, how to test, how to describe problems, when it's done
+
+**LZ proved**: A 12-year-old can do the second thing. The first thing takes years to learn.
 
 ---
 
@@ -261,17 +285,23 @@ VibeGames/
 
 ---
 
-## 💭 **From LZ: "It Was Easy"**
+## 💭 **From LZ: "It Took Work, But Different Work"**
 
-*"I just told it what I wanted. Like, 'make the snake blue' or 'add a score.' It just worked. My friends think I'm a programmer now."* - LZ, age 12
+*"Sometimes the AI got it wrong and I had to tell it to fix stuff. Like the snake would go through walls or the score wouldn't update. But I didn't have to figure out WHY—I just said 'that's broken, fix it' and it did. Normally I'd give up. This way I kept going."* - LZ, age 12
 
 **This is the point.**
 
-A 12-year-old with zero coding knowledge built four working games by having a conversation. No Stack Overflow. No debugging cryptic errors. No "why doesn't this work?"
+He didn't learn to code. He learned to:
+- Test and spot what's broken
+- Describe problems clearly
+- Iterate until it feels right
+- Know when it's "good enough"
 
-Just: describe what you want, test it, refine it, ship it.
+**No Stack Overflow. No syntax errors. No getting stuck on semicolons.**
 
-**That's vibe coding.**  
+But also: **not instant**. Each game needed 20-30 rounds of "try this... no, adjust that... better, but now this is broken."
+
+**That's the real vibe coding**: Fast loops, constant feedback, AI handles syntax, human handles taste.  
 
 ---
 
