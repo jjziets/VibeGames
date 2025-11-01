@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O and X Game - Final Win Detection Fix</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            padding: 20px;
+        }
+        
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+        
+        .status {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            margin: 20px auto;
+            max-width: 300px;
+        }
+        
+        .cell {
+            aspect-ratio: 1;
+            background-color: #3498db;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cell:hover {
+            transform: translateY(-5px);
+            background-color: #2980b9;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cell.x {
+            color: #e74c3c;
+        }
+        
+        .cell.o {
+            color: #2ecc71;
+        }
+        
+        .controls {
+            margin-top: 25px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .instructions {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+            text-align: left;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .instructions h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+        
+        .winning-cell {
+            animation: pulse 1s infinite;
+            background-color: #f1c40f;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .move-count {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .count-box {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .count-box.x-count {
+            background-color: #e74c3c;
+        }
+        
+        .count-box.o-count {
+            background-color: #2ecc71;
+        }
+        
+        .turn-counter {
+            background-color: #9b59b6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin: 15px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .current-player {
+            font-weight: bold;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>O and X Game</h1>
+        <p class="subtitle">Final Win Detection Fix - Moves placed before win checks</p>
+        
+        <div class="turn-counter">Turn: <span id="turnCount">0</span></div>
+        
+        <div class="move-count">
+            <div class="count-box x-count">X: <span id="xCount">0</span></div>
+            <div class="count-box o-count">O: <span id="oCount">0</span></div>
+        </div>
+        
+        <div class="status" id="status">Player X's turn</div>
+        
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        
+        <div class="controls">
+            <button id="resetBtn">Reset Game</button>
+        </div>
+        
+        <div class="instructions">
+            <h2>How It Works:</h2>
+            <ul>
+                <li>Players take turns placing their marks (O or X)</li>
+                <li>Maximum 3 of each type allowed on the board at any time</li>
+                <li>Before each turn, if a player would exceed 3 marks, the oldest is removed</li>
+                <li>Strikes are checked BEFORE placing the new mark</li>
+                <li>Game ends IMMEDIATELY when a player gets 3 in a row</li>
+                <li>All moves are properly placed before win detection</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetBtn = document.getElementById('resetBtn');
+            const xCountElement = document.getElementById('xCount');
+            const oCountElement = document.getElementById('oCount');
+            const turnCountElement = document.getElementById('turnCount');
+            
+            let currentPlayer = 'X';
+            let gameBoard = ['', '', '', '', '', '', '', '', ''];
+            let moveQueue = []; // Stores moves in order of placement
+            let gameOver = false;
+            let xCount = 0;
+            let oCount = 0;
+            let turnCount = 0;
+            
+            // Winning combinations
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]             // diagonals
+            ];
+            
+            // Initialize game
+            initGame();
+            
+            function initGame() {
+                // Add event listeners to cells
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.addEventListener('click', handleCellClick);
+                });
+                
+                // Reset button
+                resetBtn.addEventListener('click', resetGame);
+                
+                updateCounts();
+                updateTurnCount();
+                updateStatus();
+            }
+            
+            function handleCellClick(e) {
+                if (gameOver) return;
+                
+                const cell = e.target;
+                const index = parseInt(cell.getAttribute('data-index'));
+                
+                // If cell is already filled, do nothing
+                if (gameBoard[index] !== '') return;
+                
+                // Before allowing the move, check if the current player would exceed 3 marks
+                // This ensures we never have more than 3 of any type
+                const currentCount = currentPlayer === 'X' ? xCount : oCount;
+                
+                // If this player already has 3 marks, remove the oldest one before proceeding
+                if (currentCount >= 3) {
+                    removeOldestMoveOfPlayer(currentPlayer);
+                }
+                
+                // Place the current player's mark FIRST (this is the key fix!)
+                gameBoard[index] = currentPlayer;
+                cell.textContent = currentPlayer;
+                cell.classList.add(currentPlayer.toLowerCase());
+                
+                // Add to move queue
+                moveQueue.push({index, player: currentPlayer});
+                
+                // Update counts
+                if (currentPlayer === 'X') {
+                    xCount++;
+                } else {
+                    oCount++;
+                }
+                
+                // Check for any winning condition with the CURRENT board state
+                // This is the correct approach - check after the move is placed
+                if (checkWinner()) {
+                    // Immediately end the game with win
+                    endGame(`${currentPlayer} wins!`);
+                    return;
+                }
+                
+                // Increment turn count (this is the actual move count)
+                turnCount++;
+                
+                // Update UI
+                updateCounts();
+                updateTurnCount();
+                
+                // Switch player
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                updateStatus();
+            }
+            
+            function removeOldestMoveOfPlayer(player) {
+                // Find the oldest move of the specified player
+                for (let i = 0; i < moveQueue.length; i++) {
+                    if (moveQueue[i].player === player) {
+                        const oldestIndex = moveQueue[i].index;
+                        
+                        // Remove from board
+                        gameBoard[oldestIndex] = '';
+                        const oldestCell = document.querySelector(`.cell[data-index="${oldestIndex}"]`);
+                        oldestCell.textContent = '';
+                        oldestCell.classList.remove('x', 'o');
+                        
+                        // Update counts
+                        if (player === 'X') {
+                            xCount--;
+                        } else {
+                            oCount--;
+                        }
+                        
+                        // Remove from move queue
+                        moveQueue.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+            
+            function checkWin(board) {
+                for (const pattern of winPatterns) {
+                    const [a, b, c] = pattern;
+                    if (board[a] && 
+                        board[a] === board[b] && 
+                        board[a] === board[c]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            function checkWinner() {
+                for (const pattern of winPatterns) {
+                    const [a, b, c] = pattern;
+                    if (gameBoard[a] && 
+                        gameBoard[a] === gameBoard[b] && 
+                        gameBoard[a] === gameBoard[c]) {
+                        
+                        // Highlight winning cells
+                        pattern.forEach(index => {
+                            document.querySelector(`.cell[data-index="${index}"]`).classList.add('winning-cell');
+                        });
+                        
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            function updateStatus() {
+                status.textContent = `Player ${currentPlayer}'s turn`;
+                status.style.color = currentPlayer === 'X' ? '#e74c3c' : '#2ecc71';
+            }
+            
+            function updateCounts() {
+                xCountElement.textContent = xCount;
+                oCountElement.textContent = oCount;
+            }
+            
+            function updateTurnCount() {
+                turnCountElement.textContent = turnCount;
+            }
+            
+            function endGame(message) {
+                gameOver = true;
+                status.textContent = message;
+                status.style.color = '#f39c12';
+            }
+            
+            function resetGame() {
+                gameBoard = ['', '', '', '', '', '', '', '', ''];
+                moveQueue = [];
+                currentPlayer = 'X';
+                gameOver = false;
+                xCount = 0;
+                oCount = 0;
+                turnCount = 0;
+                
+                // Clear board
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.textContent = '';
+                    cell.classList.remove('x', 'o', 'winning-cell');
+                });
+                
+                updateCounts();
+                updateTurnCount();
+                updateStatus();
+            }
+        });
+    </script>
+</body>
+</html>

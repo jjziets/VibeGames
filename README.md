@@ -38,55 +38,45 @@ Vibe coding is development through conversation:
 
 ---
 
-## 🎲 **Games Included**
+## 🎲 **Games LZ Created**
 
-### 1. 🐍 Snake
-**Description**: Classic snake game with smooth controls and score tracking  
-**Created in**: ~10 minutes  
-**AI prompts**: ~15  
-**Lines of code**: ~150  
-**Play**: [Snake Game](games/snake/index.html)
+### 1. 🟦 Geometry Dash
+**Description**: Platform jumping game with obstacles and timing challenges  
+**What LZ asked for**: "Make a game where you jump over obstacles"  
+**File size**: 38KB (complete game in one HTML file!)  
+**Play**: [Geometry Dash](games/geometry-dash/index.html)
 
-**Controls**: Arrow keys to move, avoid walls and yourself, collect food to grow!
-
----
-
-### 2. 🟦 Tetris
-**Description**: Tetris clone with rotation, line clearing, and scoring  
-**Created in**: ~15 minutes  
-**AI prompts**: ~20  
-**Lines of code**: ~200  
-**Play**: [Tetris](games/tetris/index.html)
-
-**Controls**: 
-- Left/Right arrows: Move
-- Up arrow: Rotate
-- Down arrow: Drop faster
-- Space: Instant drop
+**Controls**: Space or Click to jump!
 
 ---
 
-### 3. 🏓 Pong
-**Description**: Two-player pong with physics and scoring  
-**Created in**: ~8 minutes  
-**AI prompts**: ~10  
-**Lines of code**: ~120  
-**Play**: [Pong](games/pong/index.html)
+### 2. ⭕ Noughts and X
+**Description**: Classic Tic-Tac-Toe with AI opponent  
+**What LZ asked for**: "I want to play noughts and crosses against the computer"  
+**File size**: 14KB  
+**Play**: [Noughts and X](games/noughts-and-x/index.html)
 
-**Controls**:
-- Player 1: W (up) / S (down)
-- Player 2: Up/Down arrows
+**Controls**: Click on squares to place your mark
 
 ---
 
-### 4. 🧱 Breakout
-**Description**: Brick-breaking game with paddle and ball physics  
-**Created in**: ~12 minutes  
-**AI prompts**: ~18  
-**Lines of code**: ~180  
-**Play**: [Breakout](games/breakout/index.html)
+### 3. 🐍 Snakes
+**Description**: The classic snake game - collect food, grow longer, avoid walls  
+**What LZ asked for**: "Make a snake game like the old Nokia phones"  
+**File size**: 24KB  
+**Play**: [Snakes](games/snakes/index.html)
 
-**Controls**: Mouse or Left/Right arrows to move paddle
+**Controls**: Arrow keys to move
+
+---
+
+### 4. 👾 Space Invaders
+**Description**: Retro space shooter with waves of enemies  
+**What LZ asked for**: "Can we do Space Invaders with aliens that shoot back?"  
+**File size**: 29KB  
+**Play**: [Space Invaders](games/space-invaders/index.html)
+
+**Controls**: Arrow keys to move, Space to shoot
 
 ---
 

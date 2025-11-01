@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake Battle Arena</title>
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+      overflow: hidden; padding: 20px;
+    }
+    .game-container {
+      position: relative; width: 100%; max-width: 800px;
+      background: rgba(0,0,0,0.7); border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      padding: 20px; text-align: center; color: white;
+    }
+    h1 {
+      font-size: 2.8rem; margin-bottom: 10px;
+      text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; letter-spacing: 2px;
+    }
+    .subtitle { font-size: 1.2rem; margin-bottom: 20px; color: #aaa; }
+    .stats {
+      display: flex; justify-content: space-between; margin-bottom: 15px;
+      background: rgba(0,30,0,0.5); padding: 10px 20px; border-radius: 10px; font-size: 1.2rem;
+    }
+    #game-board {
+      background-color: #0a1a0a; border: 3px solid #00cc00; border-radius: 10px;
+      display: block; margin: 0 auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      max-width: 100%; height: auto;
+    }
+    .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+    button {
+      background: linear-gradient(to bottom, #00cc00, #009900); color: white; border: none;
+      padding: 12px 25px; font-size: 1.1rem; border-radius: 50px; cursor: pointer; transition: all .3s;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      background: linear-gradient(to bottom, #00ff00, #00cc00);
+    }
+    button:active { transform: translateY(1px); }
+    .instructions {
+      margin-top: 20px; background: rgba(0,20,0,0.5); padding: 15px; border-radius: 10px;
+      font-size: .95rem; line-height: 1.5;
+    }
+    .instructions h3 { color: #00ff00; margin-bottom: 10px; }
+    .game-over {
+      position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+      display: none; flex-direction: column; justify-content: center; align-items: center;
+      border-radius: 20px; z-index: 10;
+    }
+    .game-over h2 {
+      font-size: 3rem; color: #ff3333; margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255,0,0,0.7);
+    }
+    .final-score { font-size: 2rem; margin-bottom: 30px; }
+    @media (max-width: 768px) {
+      h1 { font-size: 2rem; }
+      .subtitle { font-size: 1rem; }
+      .stats { flex-direction: column; gap: 10px; font-size: 1rem; }
+      .controls { flex-direction: column; align-items: center; }
+      button { width: 80%; }
+      .instructions { font-size: 0.85rem; }
+    }
+    @media (min-width: 1200px) {
+      h1 { font-size: 3.5rem; }
+      .subtitle { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>SNAKE BATTLE ARENA</h1>
+    <div class="subtitle">Enhanced AI with Coin & Player Chasing</div>
+
+    <div class="stats">
+      <div class="score">Score: <span id="score">0</span></div>
+      <div class="high-score">High Score: <span id="high-score">0</span></div>
+      <div class="length">Length: <span id="length">3</span></div>
+    </div>
+
+    <canvas id="game-board"></canvas>
+
+    <div class="controls">
+      <button id="start-btn">Start Game</button>
+      <button id="reset-btn">Reset Game</button>
+    </div>
+
+    <div class="instructions">
+      <h3>How to Play</h3>
+      <p>• Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to control your snake</p>
+      <p>• Collect coins to grow longer and earn points</p>
+      <p>• <strong>EAT smaller NPCs</strong> to grow even bigger and get bonus points!</p>
+      <p>• Avoid bigger NPC snakes or you'll die!</p>
+      <p>• NPCs die when they hit walls - use this to your advantage!</p>
+      <p>• NPCs spawn gradually every 5 seconds (max 5 total)</p>
+    </div>
+
+    <div class="game-over" id="game-over">
+      <h2>GAME OVER</h2>
+      <div class="final-score">Your Score: <span id="final-score">0</span></div>
+      <button id="restart-btn">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    // Game constants
+    const GRID_SIZE = 20;
+    const INITIAL_SNAKE_LENGTH = 3;
+    const MAX_NPC_SNAKES = 5;
+    const COIN_COUNT = 5;
+    const NPC_SPAWN_INTERVAL = 5000; // Spawn new NPC every 5 seconds
+    const MIN_SPAWN_DISTANCE = 200; // Minimum pixels away from player
+
+    // Game variables
+    const canvas = document.getElementById('game-board');
+    const ctx = canvas.getContext('2d');
+    let CANVAS_WIDTH = 600;
+    let CANVAS_HEIGHT = 400;
+
+    // Set canvas size based on viewport
+    function setCanvasSize() {
+      const container = document.querySelector('.game-container');
+      const maxWidth = Math.min(window.innerWidth - 80, 1200); // Max 1200px, leave 80px padding
+      const maxHeight = window.innerHeight - 400; // Leave room for UI
+      
+      // Calculate dimensions that are multiples of GRID_SIZE
+      CANVAS_WIDTH = Math.floor((maxWidth * 0.9) / GRID_SIZE) * GRID_SIZE;
+      CANVAS_HEIGHT = Math.floor(Math.min(maxHeight, maxWidth * 0.6) / GRID_SIZE) * GRID_SIZE;
+      
+      // Set minimum size for mobile
+      CANVAS_WIDTH = Math.max(CANVAS_WIDTH, 300);
+      CANVAS_HEIGHT = Math.max(CANVAS_HEIGHT, 300);
+      
+      // Set maximum size for very large screens
+      CANVAS_WIDTH = Math.min(CANVAS_WIDTH, 1200);
+      CANVAS_HEIGHT = Math.min(CANVAS_HEIGHT, 800);
+      
+      canvas.width = CANVAS_WIDTH;
+      canvas.height = CANVAS_HEIGHT;
+    }
+
+    // Initialize canvas size
+    setCanvasSize();
+    let score = 0;
+    let highScore = Number(localStorage.getItem('snakeHighScore')) || 0;
+    let gameRunning = false;
+    let gameLoopId = null;
+    let playerSnake = [];
+    let npcSnakes = [];
+    let coins = [];
+    let direction = 'right';
+    let nextDirection = 'right';
+    let gameSpeed = 120; // ms per update
+    let npcSpawnTimer = null;
+
+    // DOM elements
+    const scoreElement = document.getElementById('score');
+    const highScoreElement = document.getElementById('high-score');
+    const lengthElement = document.getElementById('length');
+    const startButton = document.getElementById('start-btn');
+    const resetButton = document.getElementById('reset-btn');
+    const gameOverScreen = document.getElementById('game-over');
+    const finalScoreElement = document.getElementById('final-score');
+    const restartButton = document.getElementById('restart-btn');
+
+    // Initialize game
+    function initGame() {
+      // Reset game state
+      score = 0;
+      direction = 'right';
+      nextDirection = 'right';
+      playerSnake = [];
+      npcSnakes = [];
+      coins = [];
+
+      // Set up player snake centered
+      const startX = Math.floor(CANVAS_WIDTH / 2 / GRID_SIZE) * GRID_SIZE;
+      const startY = Math.floor(CANVAS_HEIGHT / 2 / GRID_SIZE) * GRID_SIZE;
+      for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
+        playerSnake.push({ x: startX - i * GRID_SIZE, y: startY });
+      }
+
+      // Don't create NPCs at start - they'll spawn gradually
+
+      // Create coins
+      for (let i = 0; i < COIN_COUNT; i++) {
+        spawnCoin();
+      }
+
+      // Update UI
+      updateScore();
+      highScoreElement.textContent = highScore;
+
+      // Draw initial state
+      draw();
+    }
+
+    // Helper: random int inclusive range of grid cells
+    function randCell(maxCells) {
+      return Math.floor(Math.random() * maxCells) * GRID_SIZE;
+    }
+
+    // Ensure a position isn't occupied
+    function isOccupied(x, y) {
+      for (const s of playerSnake) if (s.x === x && s.y === y) return true;
+      for (const npc of npcSnakes) {
+        for (const s of npc.body) if (s.x === x && s.y === y) return true;
+      }
+      for (const c of coins) if (c.x === x && c.y === y) return true;
+      return false;
+    }
+
+    // Check if position is too close to player
+    function isTooCloseToPlayer(x, y) {
+      if (playerSnake.length === 0) return false;
+      const playerHead = playerSnake[0];
+      const dx = playerHead.x - x;
+      const dy = playerHead.y - y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < MIN_SPAWN_DISTANCE;
+    }
+
+    // Create an NPC snake with directionally-correct body
+    function createNPCSnake() {
+      // Don't spawn if we're at max
+      if (npcSnakes.length >= MAX_NPC_SNAKES) return;
+
+      const directions = ['up', 'down', 'left', 'right'];
+      const colors = ['#FF5252', '#FFD740', '#40C4FF', '#69F0AE', '#FF4081'];
+
+      let dir = directions[Math.floor(Math.random() * directions.length)];
+      let color = colors[Math.floor(Math.random() * colors.length)];
+
+      // Choose a head position that allows placing the body without going out of bounds
+      let headX, headY, body;
+      let tries = 0;
+      while (true) {
+        tries++;
+        if (tries > 200) { 
+          console.log("Failed to spawn NPC after 200 tries");
+          return; // Give up if can't find spot
+        }
+
+        // Pick a head within safe ranges depending on direction
+        if (dir === 'left') {
+          headX = Math.floor(Math.random() * ((CANVAS_WIDTH - GRID_SIZE * 2) / GRID_SIZE)) * GRID_SIZE + GRID_SIZE * 2;
+          headY = randCell(CANVAS_HEIGHT / GRID_SIZE);
+          body = [
+            { x: headX, y: headY },
+            { x: headX + GRID_SIZE, y: headY },
+            { x: headX + GRID_SIZE * 2, y: headY }
+          ];
+        } else if (dir === 'right') {
+          headX = Math.floor(Math.random() * ((CANVAS_WIDTH - GRID_SIZE * 2) / GRID_SIZE)) * GRID_SIZE;
+          headY = randCell(CANVAS_HEIGHT / GRID_SIZE);
+          body = [
+            { x: headX, y: headY },
+            { x: headX - GRID_SIZE, y: headY },
+            { x: headX - GRID_SIZE * 2, y: headY }
+          ];
+        } else if (dir === 'up') {
+          headX = randCell(CANVAS_WIDTH / GRID_SIZE);
+          headY = Math.floor(Math.random() * ((CANVAS_HEIGHT - GRID_SIZE * 2) / GRID_SIZE)) * GRID_SIZE + GRID_SIZE * 2;
+          body = [
+            { x: headX, y: headY },
+            { x: headX, y: headY + GRID_SIZE },
+            { x: headX, y: headY + GRID_SIZE * 2 }
+          ];
+        } else { // down
+          headX = randCell(CANVAS_WIDTH / GRID_SIZE);
+          headY = Math.floor(Math.random() * ((CANVAS_HEIGHT - GRID_SIZE * 2) / GRID_SIZE)) * GRID_SIZE;
+          body = [
+            { x: headX, y: headY },
+            { x: headX, y: headY - GRID_SIZE },
+            { x: headX, y: headY - GRID_SIZE * 2 }
+          ];
+        }
+
+        // Check no overlap and not too close to player
+        let ok = true;
+        for (const segment of body) {
+          if (segment.x < 0 || segment.x >= CANVAS_WIDTH || segment.y < 0 || segment.y >= CANVAS_HEIGHT || 
+              isOccupied(segment.x, segment.y) || isTooCloseToPlayer(segment.x, segment.y)) {
+            ok = false; break;
+          }
+        }
+        if (ok) break;
+      }
+
+      npcSnakes.push({
+        body,
+        direction: dir,
+        color,
+        score: body.length,
+        lastMove: 0,
+        aiType: Math.random() > 0.5 ? 'chase' : 'random',
+        lastTargetCheck: 0
+      });
+    }
+
+    // Spawn a coin at a random free location
+    function spawnCoin() {
+      let x, y;
+      do {
+        x = randCell(CANVAS_WIDTH / GRID_SIZE);
+        y = randCell(CANVAS_HEIGHT / GRID_SIZE);
+      } while (isOccupied(x, y));
+      coins.push({ x, y, value: 5 });
+    }
+
+    // Player movement
+    function movePlayerSnake() {
+      // Update direction
+      direction = nextDirection;
+
+      // New head
+      const head = { ...playerSnake[0] };
+      if (direction === 'up') head.y -= GRID_SIZE;
+      else if (direction === 'down') head.y += GRID_SIZE;
+      else if (direction === 'left') head.x -= GRID_SIZE;
+      else if (direction === 'right') head.x += GRID_SIZE;
+
+      // Walls
+      if (head.x < 0 || head.x >= CANVAS_WIDTH || head.y < 0 || head.y >= CANVAS_HEIGHT) {
+        gameOver(); return;
+      }
+
+      // Self
+      for (let i = 0; i < playerSnake.length; i++) {
+        if (playerSnake[i].x === head.x && playerSnake[i].y === head.y) {
+          gameOver(); return;
+        }
+      }
+
+      // Add head
+      playerSnake.unshift(head);
+
+      // Check NPC collisions - can we eat an NPC?
+      let npcEaten = false;
+      for (let i = 0; i < npcSnakes.length; i++) {
+        const npc = npcSnakes[i];
+        for (const seg of npc.body) {
+          if (seg.x === head.x && seg.y === head.y) {
+            // Compare lengths: player eats NPC if player is bigger
+            if (playerSnake.length > npc.body.length) {
+              // Player eats the NPC and gains their score!
+              score += npc.score;
+              npcEaten = true;
+              npcSnakes.splice(i, 1);
+              // Spawn a new NPC to replace it
+              setTimeout(createNPCSnake, 2000);
+            } else {
+              // NPC is bigger - player dies
+              gameOver(); return;
+            }
+            break;
+          }
+        }
+        if (npcEaten) break;
+      }
+
+      // Coins
+      let coinCollected = false;
+      if (!npcEaten) {
+        for (let i = 0; i < coins.length; i++) {
+          if (coins[i].x === head.x && coins[i].y === head.y) {
+            score += coins[i].value;
+            coinCollected = true;
+            coins.splice(i, 1);
+            spawnCoin();
+            break;
+          }
+        }
+      }
+
+      // Only remove tail if we didn't eat anything
+      if (!coinCollected && !npcEaten) {
+        playerSnake.pop();
+      }
+
+      updateScore();
+    }
+
+    // Distance
+    function dist(a, b) {
+      const dx = a.x - b.x, dy = a.y - b.y;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    // Find target for NPC
+    function findClosestTarget(npc) {
+      let best = null, bestD = Infinity;
+
+      // coins
+      for (const coin of coins) {
+        const d = dist(npc.body[0], coin);
+        if (d < bestD) { bestD = d; best = { type: 'coin', ...coin }; }
+      }
+
+      // player
+      if (playerSnake.length) {
+        const p = playerSnake[0];
+        const d = dist(npc.body[0], p);
+        if (d < bestD) { bestD = d; best = { type: 'player', ...p }; }
+      }
+      return best;
+    }
+
+    // NPC movement & AI
+    function moveNPCSnakes() {
+      for (let npc of [...npcSnakes]) {
+        // Simple AI tick limiter
+        if (Date.now() - npc.lastMove > 100) {
+          if (npc.aiType === 'chase') {
+            const target = findClosestTarget(npc);
+            if (target) {
+              const head = npc.body[0];
+              let newDir = npc.direction;
+
+              // Prefer axis with larger delta first
+              const dx = target.x - head.x;
+              const dy = target.y - head.y;
+              const tryOrder = Math.abs(dx) > Math.abs(dy)
+                ? (dx < 0 ? ['left','up','down','right'] : ['right','up','down','left'])
+                : (dy < 0 ? ['up','left','right','down'] : ['down','left','right','up']);
+
+              for (const d of tryOrder) {
+                if ((d === 'left' && npc.direction !== 'right') ||
+                    (d === 'right' && npc.direction !== 'left') ||
+                    (d === 'up' && npc.direction !== 'down') ||
+                    (d === 'down' && npc.direction !== 'up')) {
+                  newDir = d; break;
+                }
+              }
+
+              // occasional randomness
+              if (Math.random() < 0.05) {
+                const dirs = ['up','down','left','right'];
+                newDir = dirs[Math.floor(Math.random()*dirs.length)];
+              }
+
+              npc.direction = newDir;
+            }
+          } else {
+            // random walkers
+            if (Math.random() < 0.05) {
+              const dirs = ['up','down','left','right'];
+              npc.direction = dirs[Math.floor(Math.random()*dirs.length)];
+            }
+          }
+          npc.lastMove = Date.now();
+        }
+
+        // Compute new head
+        const head = { ...npc.body[0] };
+        if (npc.direction === 'up') head.y -= GRID_SIZE;
+        else if (npc.direction === 'down') head.y += GRID_SIZE;
+        else if (npc.direction === 'left') head.x -= GRID_SIZE;
+        else if (npc.direction === 'right') head.x += GRID_SIZE;
+
+        // Validate move
+        let validMove = true;
+
+        // Wall - NPCs die when hitting walls
+        if (head.x < 0 || head.x >= CANVAS_WIDTH || head.y < 0 || head.y >= CANVAS_HEIGHT) {
+          // NPC dies from hitting wall
+          npcSnakes = npcSnakes.filter(n => n !== npc);
+          // Spawn a new NPC to replace it after a delay
+          setTimeout(createNPCSnake, 3000);
+          continue; // Skip to next NPC
+        }
+
+        // Self
+        if (validMove) {
+          for (let i = 0; i < npc.body.length; i++) {
+            if (npc.body[i].x === head.x && npc.body[i].y === head.y) {
+              validMove = false; break;
+            }
+          }
+        }
+
+        // Collision with player (NPC moves into player)
+        if (validMove && playerSnake.length) {
+          for (const seg of playerSnake) {
+            if (seg.x === head.x && seg.y === head.y) {
+              // Compare lengths instead of scores
+              if (npc.body.length > playerSnake.length) {
+                // NPC is bigger - player dies
+                gameOver(); return;
+              } else if (npc.body.length < playerSnake.length) {
+                // Player is bigger - NPC dies, player gets the NPC's score (no growth since player didn't move into NPC)
+                npcSnakes = npcSnakes.filter(n => n !== npc);
+                score += npc.score;
+                updateScore();
+                setTimeout(createNPCSnake, 2000);
+                validMove = false;
+              } else {
+                // Same size - both bounce
+                validMove = false;
+              }
+              break;
+            }
+          }
+        }
+
+        // Collision with OTHER NPCs (resolve locally, no game over or player score changes)
+        if (validMove) {
+          for (const other of npcSnakes) {
+            if (other === npc) continue;
+            let hit = false;
+            for (const seg of other.body) {
+              if (seg.x === head.x && seg.y === head.y) {
+                hit = true; break;
+              }
+            }
+            if (hit) {
+              if (npc.score > other.score) {
+                // npc eats other
+                npcSnakes = npcSnakes.filter(n => n !== other);
+                validMove = false; // grow by skipping tail pop below
+              } else if (npc.score < other.score) {
+                // npc dies
+                npcSnakes = npcSnakes.filter(n => n !== npc);
+                validMove = false;
+              } else {
+                // tie: bounce
+                const dirs = ['up','down','left','right'];
+                npc.direction = dirs[Math.floor(Math.random()*dirs.length)];
+                validMove = false;
+              }
+              break;
+            }
+          }
+        }
+
+        if (validMove) {
+          // advance
+          npc.body.unshift(head);
+
+          // coin eat check (actually remove coin & respawn)
+          let ate = false;
+          for (let i = 0; i < coins.length; i++) {
+            if (coins[i].x === head.x && coins[i].y === head.y) {
+              coins.splice(i, 1);
+              spawnCoin(); // keep coin count stable
+              ate = true;
+              break;
+            }
+          }
+
+          if (!ate) npc.body.pop();
+
+          // update npc length-based score
+          npc.score = npc.body.length;
+        }
+      }
+    }
+
+    // Score UI
+    function updateScore() {
+      scoreElement.textContent = score;
+      lengthElement.textContent = playerSnake.length;
+
+      if (score > highScore) {
+        highScore = score;
+        highScoreElement.textContent = highScore;
+        localStorage.setItem('snakeHighScore', String(highScore));
+      }
+    }
+
+    // Draw all
+    function draw() {
+      // background
+      ctx.fillStyle = '#0a1a0a';
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      // grid
+      ctx.strokeStyle = '#0d2a0d';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x <= CANVAS_WIDTH; x += GRID_SIZE) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CANVAS_HEIGHT); ctx.stroke();
+      }
+      for (let y = 0; y <= CANVAS_HEIGHT; y += GRID_SIZE) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_WIDTH, y); ctx.stroke();
+      }
+
+      // coins
+      for (const coin of coins) {
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(coin.x + GRID_SIZE/2, coin.y + GRID_SIZE/2, GRID_SIZE/2 - 2, 0, Math.PI*2);
+        ctx.fill();
+
+        // shine
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(coin.x + GRID_SIZE/3, coin.y + GRID_SIZE/3, GRID_SIZE/6, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // player
+      for (let i = 0; i < playerSnake.length; i++) {
+        const s = playerSnake[i];
+        ctx.fillStyle = i === 0 ? '#00FF00' : `rgb(0,${Math.max(0,150 - i*5)},0)`;
+        ctx.fillRect(s.x, s.y, GRID_SIZE, GRID_SIZE);
+        ctx.strokeStyle = '#003300'; ctx.lineWidth = 1; ctx.strokeRect(s.x, s.y, GRID_SIZE, GRID_SIZE);
+      }
+
+      // NPCs
+      for (const npc of npcSnakes) {
+        for (let i = 0; i < npc.body.length; i++) {
+          const s = npc.body[i];
+          if (i === 0) {
+            ctx.fillStyle = npc.color;
+          } else {
+            const r = parseInt(npc.color.slice(1,3), 16);
+            const b = parseInt(npc.color.slice(5,7), 16);
+            const intensity = Math.max(0, 150 - i*5);
+            ctx.fillStyle = `rgb(${r},${intensity},${b})`;
+          }
+          ctx.fillRect(s.x, s.y, GRID_SIZE, GRID_SIZE);
+          ctx.strokeStyle = '#000000'; ctx.lineWidth = 1; ctx.strokeRect(s.x, s.y, GRID_SIZE, GRID_SIZE);
+        }
+        // AI indicator
+        const head = npc.body[0];
+        if (npc.aiType === 'chase') {
+          ctx.fillStyle = 'rgba(255,0,0,0.3)';
+          ctx.beginPath();
+          ctx.arc(head.x + GRID_SIZE/2, head.y + GRID_SIZE/2, GRID_SIZE/2, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Loop
+    function gameUpdate() {
+      if (!gameRunning) return;
+      movePlayerSnake();
+      moveNPCSnakes();
+      draw();
+    }
+
+    // Start spawning NPCs gradually
+    function startNPCSpawning() {
+      if (npcSpawnTimer) clearInterval(npcSpawnTimer);
+      npcSpawnTimer = setInterval(() => {
+        if (gameRunning && npcSnakes.length < MAX_NPC_SNAKES) {
+          createNPCSnake();
+        }
+      }, NPC_SPAWN_INTERVAL);
+    }
+
+    // Stop spawning NPCs
+    function stopNPCSpawning() {
+      if (npcSpawnTimer) {
+        clearInterval(npcSpawnTimer);
+        npcSpawnTimer = null;
+      }
+    }
+
+    // Controls
+    function startGame() {
+      if (gameRunning) {
+        gameRunning = false;
+        clearInterval(gameLoopId);
+        stopNPCSpawning();
+        startButton.textContent = 'Resume Game';
+      } else {
+        gameRunning = true;
+        startButton.textContent = 'Pause Game';
+        clearInterval(gameLoopId);
+        gameLoopId = setInterval(gameUpdate, gameSpeed);
+        startNPCSpawning();
+      }
+    }
+
+    function pauseGame() {
+      gameRunning = false;
+      clearInterval(gameLoopId);
+      stopNPCSpawning();
+      startButton.textContent = 'Resume Game';
+    }
+
+    function gameOver() {
+      gameRunning = false;
+      clearInterval(gameLoopId);
+      stopNPCSpawning();
+      finalScoreElement.textContent = score;
+      gameOverScreen.style.display = 'flex';
+    }
+
+    // Events
+    document.addEventListener('keydown', (e) => {
+      if (!gameRunning) return;
+      switch (e.key) {
+        case 'ArrowUp': case 'w': case 'W':
+          if (direction !== 'down') nextDirection = 'up'; break;
+        case 'ArrowDown': case 's': case 'S':
+          if (direction !== 'up') nextDirection = 'down'; break;
+        case 'ArrowLeft': case 'a': case 'A':
+          if (direction !== 'right') nextDirection = 'left'; break;
+        case 'ArrowRight': case 'd': case 'D':
+          if (direction !== 'left') nextDirection = 'right'; break;
+      }
+    });
+
+    startButton.addEventListener('click', startGame);
+
+    resetButton.addEventListener('click', () => {
+      pauseGame();
+      initGame();
+      gameOverScreen.style.display = 'none';
+      startButton.textContent = 'Start Game';
+    });
+
+    restartButton.addEventListener('click', () => {
+      gameOverScreen.style.display = 'none';
+      initGame();
+      startGame();
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      setCanvasSize();
+      draw();
+    });
+
+    // Boot
+    initGame();
+  </script>
+</body>
+</html>
