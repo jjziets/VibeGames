@@ -28,6 +28,7 @@
         canvas {
             background-color: #000;
             display: block;
+            touch-action: none; /* for proper touch drag/tap handling */
         }
         
         .ui-overlay {
@@ -808,7 +809,7 @@
             touchActive = true;
             lastTouchX = e.touches[0].clientX;
             touchStartTime = Date.now();
-        });
+        }, { passive: false });
 
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
@@ -827,7 +828,7 @@
             }
             
             lastTouchX = touchX;
-        });
+        }, { passive: false });
 
         canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
@@ -848,6 +849,34 @@
             }
             
             touchActive = false;
+        }, { passive: false });
+
+        // Mouse drag + click (desktop)
+        let mouseDragging = false;
+        let lastMouseX = 0;
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!gameRunning) return;
+            mouseDragging = true;
+            lastMouseX = e.clientX;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameRunning || !mouseDragging || player.exploding) return;
+            const dx = e.clientX - lastMouseX;
+            player.x += dx;
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+            lastMouseX = e.clientX;
+        });
+
+        window.addEventListener('mouseup', () => { mouseDragging = false; });
+
+        // Click to fire
+        canvas.addEventListener('click', () => {
+            if (!gameRunning || player.exploding) return;
+            bullets.push({ x: player.x + player.width/2 - 2, y: player.y, width: 4, height: 15 });
+            playShootSound();
         });
 
         // Player movement

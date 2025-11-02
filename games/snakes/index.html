@@ -33,6 +33,7 @@
       background-color: #0a1a0a; border: 3px solid #00cc00; border-radius: 10px;
       display: block; margin: 0 auto; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
       max-width: 100%; height: auto;
+      touch-action: none; /* enable custom swipe handling on mobile */
     }
     .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
     button {
@@ -720,7 +721,7 @@
     document.addEventListener('touchstart', (e) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
-    }, { passive: true });
+    }, { passive: false });
 
     document.addEventListener('touchend', (e) => {
       if (!gameRunning) return;
@@ -739,7 +740,7 @@
             // Swipe right
             if (direction === 'left') {
               // Trying to go opposite direction - DEATH!
-              endGame();
+              gameOver();
             } else if (direction !== 'right') {
               nextDirection = 'right';
             }
@@ -747,7 +748,7 @@
             // Swipe left
             if (direction === 'right') {
               // Trying to go opposite direction - DEATH!
-              endGame();
+              gameOver();
             } else if (direction !== 'left') {
               nextDirection = 'left';
             }
@@ -760,7 +761,7 @@
             // Swipe down
             if (direction === 'up') {
               // Trying to go opposite direction - DEATH!
-              endGame();
+              gameOver();
             } else if (direction !== 'down') {
               nextDirection = 'down';
             }
@@ -768,14 +769,52 @@
             // Swipe up
             if (direction === 'down') {
               // Trying to go opposite direction - DEATH!
-              endGame();
+              gameOver();
             } else if (direction !== 'up') {
               nextDirection = 'up';
             }
           }
         }
       }
-    }, { passive: true });
+    }, { passive: false });
+
+    // Mouse drag controls (desktop)
+    let mouseDown = false;
+    let mouseStartX = 0;
+    let mouseStartY = 0;
+
+    canvas.addEventListener('mousedown', (e) => {
+      mouseDown = true;
+      mouseStartX = e.clientX;
+      mouseStartY = e.clientY;
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+      if (!mouseDown || !gameRunning) return;
+      mouseDown = false;
+      const endX = e.clientX;
+      const endY = e.clientY;
+      const dx = endX - mouseStartX;
+      const dy = endY - mouseStartY;
+
+      if (Math.abs(dx) < minSwipeDistance && Math.abs(dy) < minSwipeDistance) return;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // horizontal
+        if (dx > 0) {
+          if (direction === 'left') gameOver(); else if (direction !== 'right') nextDirection = 'right';
+        } else {
+          if (direction === 'right') gameOver(); else if (direction !== 'left') nextDirection = 'left';
+        }
+      } else {
+        // vertical
+        if (dy > 0) {
+          if (direction === 'up') gameOver(); else if (direction !== 'down') nextDirection = 'down';
+        } else {
+          if (direction === 'down') gameOver(); else if (direction !== 'up') nextDirection = 'up';
+        }
+      }
+    });
 
     startButton.addEventListener('click', startGame);
 
