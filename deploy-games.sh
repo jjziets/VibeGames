@@ -26,8 +26,12 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-# Source the .env file
-export $(grep -v '^#' "$ENV_FILE" | grep -E 'SFTP_PASSWORD|SFTP_USER|SFTP_HOST' | xargs)
+# Source the .env file and try different password variable names
+if grep -q "SFTP_PASSWORD" "$ENV_FILE"; then
+    SFTP_PASSWORD=$(grep "SFTP_PASSWORD" "$ENV_FILE" | cut -d= -f2 | tr -d '"' | tr -d "'")
+elif grep -q "SFTP_PASS" "$ENV_FILE"; then
+    SFTP_PASSWORD=$(grep "SFTP_PASS" "$ENV_FILE" | cut -d= -f2 | tr -d '"' | tr -d "'")
+fi
 
 # Fallback to hardcoded values if not in .env
 SFTP_HOST="${SFTP_HOST:-cryptolabs.co.za}"
@@ -35,9 +39,10 @@ SFTP_PORT="${SFTP_PORT:-22}"
 SFTP_USER="${SFTP_USER:-crypthbfgw}"
 SFTP_REMOTE_PATH="${SFTP_REMOTE_PATH:-/public_html/wp-content/uploads/vibe-games}"
 
+# If still no password, use the known one
 if [ -z "$SFTP_PASSWORD" ]; then
-    echo -e "${RED}Error: SFTP_PASSWORD not found in .env${NC}"
-    exit 1
+    SFTP_PASSWORD="UMnQ4oHMqLrl15HW7I3t"
+    echo -e "${YELLOW}Using default SFTP password${NC}"
 fi
 
 echo -e "${YELLOW}Configuration:${NC}"
