@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Space Invaders</title>
     <style>
+        html, body { touch-action: none; overscroll-behavior: none; overflow: hidden; }
         body {
             margin: 0;
             padding: 20px;
@@ -828,6 +829,16 @@
             }
             
             lastTouchX = touchX;
+        }, { passive: false });
+
+        // Fallback: block scroll if touchmove is within canvas bounds
+        document.addEventListener('touchmove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const t = e.touches[0];
+            if (!t) return;
+            if (t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         canvas.addEventListener('touchend', (e) => {

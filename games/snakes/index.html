@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Snake Battle Arena</title>
   <style>
+    html, body { touch-action: none; overscroll-behavior: none; overflow: hidden; }
     * {
       margin: 0; padding: 0; box-sizing: border-box;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -780,6 +781,17 @@
       // prevent page scroll during swipe
       if (!gameRunning) return;
       e.preventDefault();
+    }, { passive: false });
+
+    // Fallback: block scroll bubbling inside iframe on any touchmove
+    document.addEventListener('touchmove', (e) => {
+      // Only if finger is within canvas rect to avoid trapping unrelated gestures
+      const rect = canvas.getBoundingClientRect();
+      const t = e.touches[0];
+      if (!t) return;
+      if (t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom) {
+        e.preventDefault();
+      }
     }, { passive: false });
 
     canvas.addEventListener('touchend', (e) => {
