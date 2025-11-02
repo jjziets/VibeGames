@@ -794,6 +794,62 @@
             keys[e.key] = false;
         });
 
+        // Touch Controls for Mobile
+        let touchActive = false;
+        let lastTouchX = 0;
+        let touchStartTime = 0;
+        const tapMaxDuration = 200; // Max ms for a tap (vs drag)
+        const tapMaxMovement = 10; // Max pixels moved for a tap
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            
+            touchActive = true;
+            lastTouchX = e.touches[0].clientX;
+            touchStartTime = Date.now();
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!gameRunning || !touchActive || player.exploding) return;
+            
+            const touchX = e.touches[0].clientX;
+            const deltaX = touchX - lastTouchX;
+            
+            // Move player based on drag
+            player.x += deltaX;
+            
+            // Keep player in bounds
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) {
+                player.x = canvas.width - player.width;
+            }
+            
+            lastTouchX = touchX;
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!gameRunning) return;
+            
+            const touchDuration = Date.now() - touchStartTime;
+            const touchMovement = Math.abs(e.changedTouches[0].clientX - lastTouchX);
+            
+            // If it was a quick tap (not a drag), shoot!
+            if (touchDuration < tapMaxDuration && touchMovement < tapMaxMovement && !player.exploding) {
+                bullets.push({
+                    x: player.x + player.width/2 - 2,
+                    y: player.y,
+                    width: 4,
+                    height: 15
+                });
+                playShootSound();
+            }
+            
+            touchActive = false;
+        });
+
         // Player movement
         function handleMovement() {
             if (!gameRunning || player.exploding) return;

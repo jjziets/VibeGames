@@ -712,6 +712,71 @@
       }
     });
 
+    // Touch/Swipe Controls for Mobile
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const minSwipeDistance = 30; // Minimum pixels for a swipe
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (!gameRunning) return;
+      
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+      
+      // Determine if swipe is horizontal or vertical
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe
+        if (Math.abs(deltaX) > minSwipeDistance) {
+          if (deltaX > 0) {
+            // Swipe right
+            if (direction === 'left') {
+              // Trying to go opposite direction - DEATH!
+              endGame();
+            } else if (direction !== 'right') {
+              nextDirection = 'right';
+            }
+          } else {
+            // Swipe left
+            if (direction === 'right') {
+              // Trying to go opposite direction - DEATH!
+              endGame();
+            } else if (direction !== 'left') {
+              nextDirection = 'left';
+            }
+          }
+        }
+      } else {
+        // Vertical swipe
+        if (Math.abs(deltaY) > minSwipeDistance) {
+          if (deltaY > 0) {
+            // Swipe down
+            if (direction === 'up') {
+              // Trying to go opposite direction - DEATH!
+              endGame();
+            } else if (direction !== 'down') {
+              nextDirection = 'down';
+            }
+          } else {
+            // Swipe up
+            if (direction === 'down') {
+              // Trying to go opposite direction - DEATH!
+              endGame();
+            } else if (direction !== 'up') {
+              nextDirection = 'up';
+            }
+          }
+        }
+      }
+    }, { passive: true });
+
     startButton.addEventListener('click', startGame);
 
     resetButton.addEventListener('click', () => {
